@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Page</title>
+    <script src="https://kit.fontawesome.com/165dc7dd79.js" crossorigin="anonymous"></script>
+    <style>
+        * {
+            margin: 0px;
+            padding: 0px;
+        }
+        h2 {
+            transform: translate(650px, 100px);
+        }
+        .card {
+            transition: 0.3s;
+            width: 20%;
+            box-shadow: 0 6px 10px 0 rgba(0, 0, 0, 0.19);
+            transform: translate(650px, 100px);
+        }
+        .card:hover {
+            box-shadow: 10px 10px rgb(182,199,206);
+        }
+        .container > p {
+            font-size: 15px;
+            align-items: center;
+            height: 50px;
+        }
+        .song_details{
+            align-items: center;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            padding: 6px;
+        }
+        i{
+            cursor: pointer;
+        }
+        #slider{
+            transform: translate(-7px, -10px);
+        }
+        #forward{
+            transform: translate(5px, -10px);
+        }
+        #backward{
+            transform: translate(-15px, -10px);
+        }
+        #play{
+            transform: translate(67px,10px);
+        }
+        #replay{
+            transform: translate(-95px, -48px);
+        }
+        #volume{
+            transform: translateX(-28px);
+        }
+        #volumeBar{
+            transform: translateX(-10px);
+        }
+    </style>
+</head>
+<body>
+ 
+
+<div class="card">
+    <img id="song_image" src="" alt="song" style="width: 100%;">
+    <div class="container">
+        <h4 class="song_details" id="song_name" ><b>I Guess</b></h4>
+        <h6 class="song_details" id="song_artist">Song · 2,421,466 Plays · 3:06 · Hindi</h6><h6 class="song_details" id="song_album">℗ 2022 Kalamkaar</h6>
+        <audio id="song" src=""></audio>
+        <br>
+        <div style="text-align: center;">
+            <!-- Play/Pause Icon -->
+            <i class="fa-regular fa-circle-play" id="play" onclick="playPause()"></i>
+ 
+            <!-- Duration Change Slider -->
+            <input type="range" id="slider"> &nbsp;&nbsp; <br>
+ 
+            <!-- Forward and Backward 10 Sec Icons -->
+            <i class="fa-solid fa-backward" id="backward" onclick="backTenSec()"></i>
+            &nbsp;&nbsp;
+            <i class="fa-solid fa-forward" id="forward" onclick="forTenSec()"></i><br>
+            <!-- Replay Icon -->
+            <i class="fa-solid fa-arrow-rotate-right fa-flip-both" id="replay" onclick="again()"></i>
+            <br>
+            <!-- Volume Change Slider -->
+            <i class="fa-solid fa-volume-off" id="volume"></i><input id="volumeBar" type="range"  min="0" max="1" step="0.1" value="0.5" onchange="changeVolume(this)">
+        </div>
+    </div>
+</div>
+ 
+<script>
+    var play = document.getElementById("play");
+    var slider = document.getElementById("slider");
+    var song = document.getElementById("song");
+    var volumeControl = document.getElementById("vol");
+
+    // To track which song is currently playing
+    var currentSongKey = '';
+
+    window.onload = function () {
+        var url = window.location;
+        var params = new URLSearchParams(url.search);
+        var songImageUrl = params.get('image');
+        var songSrc = params.get('song');
+        var songName=params.get('name');
+        var songArtist=params.get('artist');
+        var songAlbum=params.get('album');
+        console.log(songName);
+        console.log(songArtist);
+        document.getElementById('song_name').innerHTML=songName;
+        document.getElementById('song_artist').innerHTML="Artist: "+songArtist;
+        document.getElementById('song_album').innerHTML="Album: "+songAlbum;
+        document.getElementById("song_image").src = songImageUrl;
+        song.src = songSrc;
+
+        // Save the current song's URL as the key
+        currentSongKey = songSrc;
+
+        // Retrieve playback data specific to this song from localStorage
+        var savedTime = localStorage.getItem(currentSongKey + "_songTime");
+        var savedVolume = localStorage.getItem(currentSongKey + "_songVolume");
+        var savedPlayState = localStorage.getItem(currentSongKey + "_isPlaying");
+
+        if (savedVolume !== null) {
+            song.volume = savedVolume;
+            volumeControl.value = savedVolume;
+        }
+
+        song.onloadeddata = function () {
+            if (savedTime !== null) {
+                song.currentTime = savedTime;
+            }
+
+            if (savedPlayState === "true") {
+                song.play();
+                play.classList.add("fa-circle-pause");
+                play.classList.remove("fa-circle-play");
+            }
+
+            slider.max = song.duration;
+            slider.value = song.currentTime;
+        };
+    };
+
+    song.ontimeupdate = function () {
+        if (currentSongKey) {
+            localStorage.setItem(currentSongKey + "_songTime", song.currentTime);
+        }
+    };
+
+    slider.onchange = function () {
+        song.play();
+        song.currentTime = slider.value;
+        play.classList.add("fa-circle-pause");
+        play.classList.remove("fa-circle-play");
+    };
+
+    function playPause() {
+        if (play.classList.contains("fa-circle-pause")) {
+            song.pause();
+            play.classList.remove("fa-circle-pause");
+            play.classList.add("fa-circle-play");
+            localStorage.setItem(currentSongKey + "_isPlaying", "false");
+        } else {
+            song.play();
+            play.classList.add("fa-circle-pause");
+            play.classList.remove("fa-circle-play");
+            localStorage.setItem(currentSongKey + "_isPlaying", "true");
+        }
+    }
+
+    function changeVolume(elm) {
+        song.volume = elm.value;
+        localStorage.setItem(currentSongKey + "_songVolume", elm.value);
+    }
+
+    function backTenSec() {
+        song.currentTime -= 10;
+        localStorage.setItem(currentSongKey + "_songTime", song.currentTime);
+    }
+
+    function forTenSec() {
+        song.currentTime += 10;
+        localStorage.setItem(currentSongKey + "_songTime", song.currentTime);
+    }
+
+    function again() {
+        song.currentTime = 0;
+        localStorage.setItem(currentSongKey + "_songTime", song.currentTime);
+    }
+
+    setInterval(() => {
+        slider.value = song.currentTime;
+    }, 500);
+</script>
+
+</body>
+</html>
+ 
+ 
